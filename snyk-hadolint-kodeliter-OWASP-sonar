@@ -1,0 +1,94 @@
+
+--------------------------------------------------------sonar scanner--------------------------------------------------------
+      # - sonar-scanner \ -Dsonar.projectKey=java \ -Dsonar.host.url=http://13.201.30.234:9000 \ -Dsonar.token=sqp_8b9ac6641ee78b296e06eba5e1710ba3a408255a
+      - sonar-scanner -X -Dsonar.projectKey=java -Dsonar.java.binaries=webapp/target -Dsonar.sources=. -Dsonar.host.url=http://13.201.30.234:9000 -Dsonar.login=sqp_8b9ac6641ee78b296e06eba5e1710ba3a408255a
+      - sleep 10
+------------------------------------------------------hadolint----------------------------------------------------------------
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing app dependencies...
+      - curl -LO https://dl.k8s.io/release/v1.27.2/bin/linux/amd64/kubectl   
+      - chmod +x ./kubectl
+      - mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+      - echo 'export PATH=$PATH:$HOME/bin' >> ~/.bashrc
+      - source ~/.bashrc
+      - echo 'Check kubectl version'
+      - kubectl version --short --client
+      # Install Helm
+      - curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+      - chmod +x get_helm.sh
+      - ./get_helm.sh
+     # Hadolint installation 
+      -  echo "Downloading the Hadolint tool..."
+      -  wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
+      -  sudo cp hadolint /usr/local/bin/hadolint
+      -  sudo chmod +x /usr/local/bin/hadolint
+      -  hadolint --version
+      #kubelinetr
+      - wget https://github.com/stackrox/kube-linter/releases/download/0.2.5/kube-linter-linux.tar.gz
+      - tar -xvf kube-linter-linux.tar.gz
+      - mv kube-linter /usr/local/bin/
+
+       # - yum install java-1.8.0-openjdk-devel
+      - wget https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_Linux.tar.gz
+      - tar -xvf ZAP_2.14.0_Linux.tar.gz
+    
+  pre_build:
+    commands:
+      
+      - echo $DOCKER_LOGIN_TOKEN | docker login --username ankitanagarale  --password-stdin
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 891377353125.dkr.ecr.us-east-1.amazonaws.com
+      - IMAGE_REPO_NAME=891377353125.dkr.ecr.us-east-1.amazonaws.com/security-ecr1
+      - IMAGE_TAG=v1.0.0.RELEASE
+     
+
+      
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo "Build started on $(date)"
+      - echo "Validating the Dockerfile using Hadolint tool..."
+    #  Docker file validation using Hadolint 
+      - hadolint --config hadolint.yml Dockerfile 2>&1 | tee hadolint.log
+    # building docker image   
+      - echo Building the Docker image...          
+      - docker build --tag $IMAGE_REPO_NAME:$IMAGE_TAG .
+ 
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push $IMAGE_REPO_NAME:$IMAGE_TAG
+      - echo Push the latest image to cluster
+      - kube-linter checks list
+      - kube-linter lint deployment.yaml 2>&1 | tee kube-linter.log
+      - echo "Setting Environment Variables related to AWS CLI for Kube Config Setup"          
+      - CREDENTIALS="$(aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 900)"
+      - export AWS_ACCESS_KEY_ID="$(echo ${CREDENTIALS} | jq -r '.Credentials.AccessKeyId')"
+      - export AWS_SECRET_ACCESS_KEY="$(echo ${CREDENTIALS} | jq -r '.Credentials.SecretAccessKey')"
+      - export AWS_SESSION_TOKEN="$(echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken')"
+      - export AWS_EXPIRATION=$(echo ${CREDENTIALS} | jq -r '.Credentials.Expiration')
+      - echo "Update Kube Config"      
+      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME
+      - kubectl apply -f deployment.yaml
+      - kubectl get all 
+      - kubectl get pods
+      - kubectl get svc
+      - sleep 60 
+      - kubectl get all 
+      - LB_ADDRESS=$(kubectl get svc nodesy-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+      - echo $LB_ADDRESS
+      - ./ZAP_2.14.0/zap.sh -cmd -quickurl http://LB_ADDRESS/ -quickprogress -quickout ../zap_report.html
+
+      
+artifacts:
+  files:
+    - hadolint.log
+    - kube-linter.log
+    - zap_report.html
+  
