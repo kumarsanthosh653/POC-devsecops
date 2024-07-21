@@ -1,0 +1,18 @@
+1.Generate a private key. Be sure to provide valid (even though false) domain names when needed.
+
+openssl genrsa 2048 > my-aws-private.key
+
+2. Generate the certificate providing the key generated in #1
+
+openssl req -new -x509 -nodes -sha1 -days 3650 -extensions v3_ca -key my-aws-private.key > my-aws-public.crt
+
+3. Compile both of the above into a PKCS12 bundle (EDIT: Add correct command after Rodrigo pointed out an error below)
+
+openssl pkcs12 -inkey my-aws-private.key -in my-aws-public.crt -export -out my-aws-public.p12
+
+4. go to ACM service import option
+
+add body is certifacte
+add private is private key
+
+5. Add the certificate T LISTNER by using same import or add from ACM

@@ -1,0 +1,50 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Skipping yum update..."
+
+  pre_build:
+    commands:
+      - echo "Nothing to do in the pre_build phase..."
+
+  build:
+    commands:
+      - echo "Build started"
+      - export SONAR_SCANNER_VERSION=5.0.1.3006
+      - export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux
+      - curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip
+      - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+      - export PATH=$SONAR_SCANNER_HOME/bin:$PATH
+      - export SONAR_SCANNER_OPTS="-server"
+      - mvn clean package
+      - ls -la webapp/*
+      - ls -la webapp/target/webapp/
+      # - sonar-scanner \ -Dsonar.projectKey=java \ -Dsonar.host.url=http://13.201.30.234:9000 \ -Dsonar.token=sqp_8b9ac6641ee78b296e06eba5e1710ba3a408255a
+      - sonar-scanner -X -Dsonar.projectKey=java -Dsonar.java.binaries=webapp/target -Dsonar.sources=. -Dsonar.host.url=http://13.201.30.234:9000 -Dsonar.login=sqp_8b9ac6641ee78b296e06eba5e1710ba3a408255a
+      - sleep 10
+      # - curl -s -u sqp_8b9ac6641ee78b296e06eba5e1710ba3a408255a: http://13.201.30.234:9000/api/qualitygates/project_status?projectKey=AWS-CodePipeline-Project > /tmp/result.json
+      # - cat /tmp/result.json
+      # - mvn clean package
+      - cp webapp/target/webapp.war .
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 637423476845.dkr.ecr.ap-south-1.amazonaws.com
+      - docker build -t ecs .
+      - docker tag ecs:latest 637423476845.dkr.ecr.ap-south-1.amazonaws.com/ecs:firstimage
+      - docker push 637423476845.dkr.ecr.ap-south-1.amazonaws.com/ecs:firstimage
+      - printf '[{"name":"container","imageUri":"%s"}]' 637423476845.dkr.ecr.ap-south-1.amazonaws.com/ecs:firstimage > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - appspec.yaml
+    - taskdef.json
+  secondary-artifacts:
+    DefinitionArtifact:
+      files:
+        - appspec.yaml
+        - taskdef.json
+    ImageArtifact:
+      files:
+        - imagedefinitions.json
+
