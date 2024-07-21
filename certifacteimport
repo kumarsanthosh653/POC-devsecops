@@ -16,3 +16,5 @@ add body is certifacte
 add private is private key
 
 5. Add the certificate T LISTNER by using same import or add from ACM
+
+link https://medium.com/@chamilad/adding-a-self-signed-ssl-certificate-to-aws-acm-88a123a04301
