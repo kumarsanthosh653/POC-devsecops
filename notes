@@ -81,4 +81,21 @@ sh var.sh
 ---------------------------------------------------------------------------
 shellscript-class-3------->
 
+command Line arguments:while executing shell script passing the values called as command line arguments.
+
+sh dbbackup.sh dbname dbloc
+
+$0 script file name
+$1 1st arg value --> dbname
+$2 2nd arg value --> dbloc
+$3 so on
+${10} if its 2 digit arg value
+
+$# ----> no of args
+$$ ----> pid
+$? ----> previous cmd execution status
+
+
+----------------------------------------------------------------------------------------
+
 
