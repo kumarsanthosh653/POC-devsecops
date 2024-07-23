@@ -1,0 +1,317 @@
+sqp_8b9ac6641ee78b296e06eba5e1710ba3a408255a
+
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+  pre_build:
+    commands:
+      - echo This is a pre build
+      - sudo yum update -y
+      - export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" $(aws sts assume-role --role-arn "arn:aws:iam::901904061701:role/cross-account-role-policy" --role-session-name AWSCLI-Session --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+        #- aws sts assume-role --role-arn "arn:aws:iam::901904061701:role/cross-account-role-policy" --role-session-name AWSCLI-Session
+      - aws sts get-caller-identity
+        #- aws configure set region ap-south-1 
+      - git config --global credential.helper '!aws codecommit credential-helper $@' && git config --global credential.UseHttpPath true
+      - git clone
+https://git-codecommit.ap-south-1.amazonaws.com/v1/repos/monitor_api
+--branch master
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - cd monitor_api
+      # - mkdir sonarqube -p
+      # - cd sonarqube
+      # - wget
+https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
+      # - unzip sonar-scanner-cli-4.2.0.1873-linux.zip
+      # - mv sonar-scanner-4.2.0.1873-linux /opt/sonar-scanner
+      # - echo -e "sonar.host.url=
+https://sonarqube.ozonetel.com/
+\n  sonar.sourceEncoding=UTF-8 \n sonar.qualitygate.wait=true " >> /opt/sonar-scanner/conf/sonar-scanner.properties
+      # - echo -e "#/bin/bash \n export PATH='$PATH:/opt/sonar-scanner/bin'" >> /etc/profile.d/sonar-scanner.sh
+      # - source /etc/profile.d/sonar-scanner.sh
+      # - sonar-scanner -v
+      # - cd ..
+      #- whereis gradle
+      #- which gradle   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
+      #- which java
+      #- whereis java
+      #- java -version
+  build:
+    commands:
+      - mvn clean package -Dmaven.test.skip
+      #- sonar-scanner -X -Dsonar.projectKey=monitor-api -Dsonar.java.binaries=target/classes -Dsonar.sources=. -Dsonar.host.url=
+https://sonarqube.ozonetel.com
+  -Dsonar.login=465ee621639d0e742703640f444ddd5035328ca5
+      - echo Starting build `date`
+      - echo Current directory is `pwd`
+      #- chmod +x ./gradlew
+      #- ./gradlew bootJar
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 610802472256.dkr.ecr.us-east-1.amazonaws.com
+      - REPOSITORY_URI=610802472256.dkr.ecr.us-east-1.amazonaws.com/monitorapi
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      # ls -lrt */* #target/*/* #**/ozonetel*.jar
+      - cp target/monitorAPI-v-0.1.jar . 
+      - aws s3 cp s3://ca-ui-dev/monitor_api-taskdef,appspec,application.properties,dockerfile/monitordocker.txt .
+      - aws s3 cp s3://ca-ui-dev/monitor_api-taskdef,appspec,application.properties,dockerfile/monitor-api-application .
+      - docker build -t $REPOSITORY_URI:latest -f monitordocker.txt .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build is completed
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Imaged is Pushed to ECR successfully..
+      - cd ..
+      - aws s3 cp s3://ca-ui-dev/monitor_api-taskdef,appspec,application.properties,dockerfile/taskdef.json .
+      - aws s3 cp s3://ca-ui-dev/monitor_api-taskdef,appspec,application.properties,dockerfile/appspec.yaml .
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG > imageDetail.json
+artifacts:
+  files: 
+    - 'appspec.yaml'
+    - 'taskdef.json'
+    - 'imageDetail.json'
+#     - '**/DashboardPortal.war'
+  secondary-artifacts:
+    DefinitionArtifact:
+      files:
+        - appspec.yaml
+        - taskdef.json
+    ImageArtifact:
+      files:
+        - imageDetail.json
+      
+ 
+
+
+Terraform Introduction:
+
+
+terraform init
+
+-> It will initialise or download the plugins mentioned in the main.tf files
+
+-> basically when u wanted to interact with aws and the provider plugins initialised 
+and downloaded in .terraform folder it will help us to interact with the particular cloud.
+
+
+
+
+terraform components
+--------------------
+
+1. providers:
+
+terraform itself gives us a plugin like providers which is a interactive component that will be downloaded
+during terraform init and make us interact particular cloud or service based on provider we mentioned.
+
+Terraform relies on plugins called providers to interact with cloud providers, SaaS providers, and other APIs.
+Terraform configurations must declare which providers they require so that Terraform can install and use them
+
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+# Configure the AWS Provider
+provider "aws" {
+  region = "us-east-1"
+}
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+2. Resources: 
+
+Resources are nothing but a defining  infrastructure that will be created in the cloud or service that defined in provider. 
+
+resource = component type
+aws_vpc = resource type
+example = rsource name 
+
+
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+3.Variables:
+
+Variables are used to define the values dyanamically for infra created using resources in providers.we cant hard code the 
+values inside the code thats reason using variables we pass the dyanamic values or makes our deployment more dynamiclly.
+
+variables.tf---->
+
+variable "instance_name" {
+  description = "Value of the Name tag for the EC2 instance"
+  type        = string
+  default     = "ExampleAppServerInstance"
+}
+
+main.tf --->
+resource "aws_instance" "app_server" {
+   ami           = "ami-08d70e59c07c61a3a"
+   instance_type = "t2.micro"
+
+   tags = {
+    Name = "ExampleAppServerInstance"
+    Name = var.instance_name
+   }
+ }
+----------------------
+main.tf
+----------------------
+ terraform {
+  required_providers {
+    aws = {
+
+     source = "hashicorp/aws"
+     version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+   region = var.awsregion
+  }
+
+resource "aws_s3_bucket" "s2resource" {
+    bucket = var.s3variable
+    acl = "private"
+    tags = {
+      name = "sjs"
+      env = "sjs"
+     }
+ }
+
+resource "aws_instance" "instanceresource" {        
+   ami = "ami-0e1d06225679bc1c5"
+   instance_type = var.instancetype
+   count = var.instancecount
+
+}
+
+------------------------
+variables.tf------------
+ -----------------------
+ variable "awsregion" {
+     type = string
+    }
+variable "s3variable" {
+     type = string
+    }
+variable "instancetype" {
+     type = string
+    }
+variable "instancecount" {
+     type = number
+    }
+
+------------------------------
+terraform.tfvars
+-------------awsregion = "ap-south-1"
+s3variable = "jjjjjjsjsjjjj"
+instancetype = "t2.micro"
+instancecount = 2-----------------
+
+ 
+ 
+ --------------------------------------------------------------------------------------------------------------------------------------------
+
+4.statefile:
+
+A Terraform state file is a key component in managing infrastructure with Terraform. It tracks the current state of your infrastructure resources
+it compares the current state to desired state using this terraform state file.
+
+if the state file is deleted or corrupted we can restore it using import command.
+
+suppose infra created and terraform.tfstate file created and bymistakenly deleted u will get and error that resources are available cannot 
+terraform apply.
+
+THEN
+
+he syntax is: terraform import <resource_type>.<resource_name> <resource_id>
+
+terraform import resourcename resourceid
+
+terraform backend or remote state:
+
+multiple people working on same infra and in order to maintain the sync of dta and centralised tf state file we maintain backend or remote state filesin 
+s3 bucket or storage account
+
+
+
+
+ --------------------------------------------------------------------------------------------------------------------------------------------
+
+ 5. provisioners
+
+ Provisioners in Terraform are used to execute scripts or commands on a local or remote machine as part of the resource creation or destruction process. They allow you to run configuration management tools, bootstrap instances, or perform other setup tasks.
+
+Types of Provisioners
+
+1.File Provisioner: Transfers files or directories from the machine running Terraform to the target resource.
+
+2.Remote Exec Provisioner: Executes scripts on remote resources after they are created.
+
+3.Local Exec Provisioner: Executes scripts on the machine running Terraform.
+
+Example: Using Provisioners
+
+
+Here is an example of how to use the remote-exec provisioner to run a script on an AWS EC2 instance after it has been created.
+
+
+provider "aws" {
+  region = "us-west-2"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+  key_name      = "my-key"
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y apache2",
+      "sudo systemctl start apache2"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("~/.ssh/my-key.pem")
+      host        = self.public_ip
+    }
+  }
+
+  tags = {
+    Name = "example-instance"
+  }
+}
+Explanation
+Provider Block:
+
+Configures the AWS provider to use the us-west-2 region.
+Resource Block (aws_instance):
+
+Defines an AWS EC2 instance with the specified AMI and instance type.
+The key_name attribute specifies the SSH key to be used for accessing the instance.
+Provisioner Block (remote-exec):
+
+inline script specifies commands to be run on the instance after it is created. In this case, it updates the package list, installs Apache, and starts the Apache service.
+connection block defines the connection details for the remote instance:
+type: Specifies the connection type, here it's SSH.
+user: The SSH user, ubuntu in this case.
+private_key: The private key used for SSH authentication.
+host: The public IP address of the instance (accessed using self.public_ip).
