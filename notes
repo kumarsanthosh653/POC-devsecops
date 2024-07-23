@@ -93,9 +93,43 @@ ${10} if its 2 digit arg value
 
 $# ----> no of args
 $$ ----> pid
-$? ----> previous cmd execution status
+$? ----> previous cmd execution status will be o - successfull or 127 - failure
 
+see this cat args.sh
+echo $1
+echo $2
+echo $3
+echo $4
+echo $10
+echo $@
+echo $*
+echo $#
+echo $$
+echo $?
+cal
 
+next sh args.sh
+next pass arguments sh args.shh santhu name
+and see
+
+if else condition:----------
+----------------
+if [ $# -eq 2 ]
+then
+echo $1
+echo $2
+echo $3
+echo $4
+echo $10
+echo $@
+echo $*
+echo $#
+echo $$
+echo $?
+cal
+else
+echo "please pass like echo$0 arg1 arg2"
+fi
 ----------------------------------------------------------------------------------------
 
 
