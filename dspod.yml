@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: 
+  name: ds
+  namespace: own
+spec:
+  selector:
+    matchLabels:
+      app: java
+  template:
+    metadata:
+      name: tmp
+      labels:
+        app: java
+    spec:
+     containers:
+       - name: con
+         image: 637423476845.dkr.ecr.ap-south-1.amazonaws.com/ecs:test
+         ports:
+         - containerPort: 8080

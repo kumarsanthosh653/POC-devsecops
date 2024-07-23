@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: rc
+  namespace: own
+spec:
+  replicas: 2
+  selector:
+    app: java
+  template:
+    metadata:
+      name: tmp
+      labels:
+        app: java
+    spec:
+      containers:
+      - name: con
+        image: 637423476845.dkr.ecr.ap-south-1.amazonaws.com/ecs:test
+        ports:
+        - containerPort: 8080
