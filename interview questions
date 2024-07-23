@@ -1,0 +1,15 @@
+1.how to create backups to instances?
+using lifecycle policy for snapshots at volumes by tagging
+
+2. how db can be coonected from deployment?
+3.when configmaps values changed how about deployment using it?
+4. how to create custom level metrics ?
+5.if system rebooted couldnt able to ssh how ?
+6. system status check failed how ?
+7. how about there are 100 subnets decreased to 20 how can we notify that?
+8 ansible dry run how and avoid or skipped error on tasks ?
+9. kubernetes upgradation ?
+10.how to find command ?
+11. shell script ?
+12. can a disaster recover can be done using route 53 ?
+13. can a cahing can be done manually at cloudfront ? 
