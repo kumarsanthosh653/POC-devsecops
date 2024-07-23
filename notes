@@ -20,13 +20,15 @@ date
 
 sh file.sh
 
-step 2
+step 2:----
 
 to debug use 
 
 sh -x file.sh
 
-step 3
+shellscript-class-2------->
+
+step 3:-----
 to debug in file
 vi file.sh
 -x
@@ -35,7 +37,7 @@ echo "hi"
 date
 +x
 
-step4:
+step4:------
 One Line Comment
 
 #
@@ -45,4 +47,38 @@ Multi Line COmment
 <<sangthu
 file content here
 Santhu or santhu>>
+
+step5:variables:-------
+1.system defined variables
+env
+printenv
+
+envname=envvalue
+name=santhu
+
+echo $name
+
+if u enter env in system u will get all system degffine d variables
+
+if u want to change any enter export name=santhus
+
+echo $name will get different values
+
+2. user defined variables
+
+cat var.sh
+a=10
+b=20
+c=30
+name=santhu
+
+echo "a value is $a"
+echo "a value is $b"
+echo "a value is $c"
+echo "name is $name"
+
+sh var.sh
+---------------------------------------------------------------------------
+shellscript-class-3------->
+
 
