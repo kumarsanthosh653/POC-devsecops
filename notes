@@ -130,6 +130,36 @@ cal
 else
 echo "please pass like echo$0 arg1 arg2"
 fi
+
+-eq --> equals to
+-le --> lessthenequal
+-lt --> lessthen
+-ge --> greaterthenoreual
+-gt --> greater than
+-ne --> not equals
+
+string:------->
+--------
+string must be '' or ""
+string is like
+some_vars="hi team i am working on the shell script"
+value= $some_vars
+length of string = ${#some_vars}
+if u rewuired to skip 10 characters
+echo ${some_vars:10}
+if u requiredonly 5 characters after skipping 10 characters
+echo $(some_vars:10:5)
+if u want last 5 characters
+echo $(some_vars: -5)
+
+string_vars="hi team i am working on the shell script"
+
+echo $string_vars
+echo ${#string_vars}
+echo ${string_vars:12}
+echo ${string_vars:12:7}
+echo ${string_vars: -6}
+
 ----------------------------------------------------------------------------------------
 
 
