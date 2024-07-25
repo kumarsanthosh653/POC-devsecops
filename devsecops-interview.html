@@ -1,0 +1,131 @@
+
+________________________________________________________________________________________________________
+Git Guardian
+
+Dependency Track
+Splunk
+
+Security Hub
+
+
+________________________________________________________________________________________________________
+
+Aws config:-----------
+configuration changes of Resources are tracked here and sent sns topic
+
+-> records only specific resource types or all
+-> role for it
+-> s3 bucket that records the track
+-> sns topic if wanted for email notification
+-> rules
+-> Aws co fig custom rules which will be taken from lambda
+_____________________________________________________________________________________________________
+
+Cloud Trail:-------------
+
+Every action that you may take in AWS is monitored and with AWS Cloudtrail you can store all these actions,
+API calls, and service runs inside an S3 bucket to query them later.
+
+Given a user, what services did the user use in a period?
+Given a service, which users integrated with it in a given period?
+What IP address did what request to the AWS services?
+
+Data events
+Management events
+
+create bucket policy to allow cloud trail to put logs which will be json
+
+__________________________________________________________________________________________________________
+GuardDuty
+
+GuardDuty is AWS’s security monitoring service that analyzes VPC Flow Logs, CloudTrail management event logs, 
+Cloudtrail S3 event logs and DNS logs
+____________________________________________________________________________________________________________
+Inspector
+
+hybrid or agent based ssm agent in ec2 machines
+scan vulnerabilities in ec2 machines, ecr images as well
+
+____________________________________________________________________________________________________________
+
+Aws System Manager----regional
+
+What Is AWS Systems Manager?
+
+AWS Systems Manager is a collection of capabilities for configuring and managing your Amazon EC2 instances, 
+on-premises servers and virtual machines, and other AWS resources at scale.
+
+nodemanagement-fleet manager-run a command-shell cript -ls -la 
+
+inventory to fetch the metadata might be metrics at aoprticulat time or scheduled
+AWS Systems Manager Inventory provides visibility into your Amazon EC2 and on-premises computing environment. 
+
+AWS System Manager State Manager is to run the command on a scheduled basis(eg: SnapShot Creation)
+Go To Node Management → State Manager → Create association
+
+session manager to connect instances
+
+ssm parameters to store parameters
+_______________________________________________________________________________________________________________________
+SCA Checks: pom.xml the libraries which is getting imported open-source dependencies used in the project
+
+Dependency Identification:
+Vulnerability Detection:
+License Compliance:
+
+Key Aspects SAST Tools Check for in Java Projects:
+Code Vulnerabilities:
+Code Quality Issues:
+Security Misconfigurations:
+
+Synk:
+✓ Synk is a vulnerability scanner for open source dependencies. You can integrate it into your 
+CI/CD pipeline to scan your project's dependencies for known vulnerabilities.
+✓ Configure Synk to run automatically as part of your build process or scheduled scans.
+✓ Utilize Synk's APIs or CLI to report vulnerabilities and take appropriate actions based on the 
+severity of the findings.
+
+Hadolint:
+✓ Hadolint is a linter for Dockerfiles, which helps identify potential issues and best practices 
+violations in Dockerfiles.
+✓ Integrate Hadolint into your CI/CD pipeline to automatically check Dockerfile syntax and 
+adherence to best practices.
+✓ Configure Hadolint to run as a pre-build step or as part of your Docker image build process.
+hadolint --config hadolint.yml Dockerfile 2>&1 | tee log.yml
+
+Kubelinter:
+✓ Kubelinter is a linter for Kubernetes YAML files, ensuring adherence to best practices and 
+identifying potential issues.
+✓ Incorporate Kubelinter into your CI/CD pipeline to validate Kubernetes YAML files before 
+deploying to your cluster.
+✓ Integrate Kubelinter into your CI workflow to run alongside other tests or as a separate step 
+dedicated to Kubernetes manifest validation.
+kube-linter lint ndep.yml  2>&1 | tee log.yml
+
+OWASP Testing (DAST):
+✓ OWASP provides a set of tools and methodologies for dynamic application security testing 
+(DAST) to identify vulnerabilities in web applications.
+✓ Integrate OWASP ZAP (Zed Attack Proxy) or similar DAST tools into your pipeline to 
+automatically scan your web applications for common security vulnerabilities.
+✓ Configure OWASP ZAP to run against your web application at appropriate stages of your 
+CI/CD pipeline, such as after deployment to a staging environment.
+
+zap.sh -quciker 
+
+______________________________________________________________________________________________________
+{
+    -   "scan_config": {
+               "id": "2514066b-4b96-4aad-a707-306167949c0c"
+           },
+           "scan_type": "REGULAR"
+   
+   
+           {
+   "scan_config": {
+   "id": "2514066b-4b96-4aad-a707-306167949c0c"
+   },
+   "scan_type": "VERIFICATION",
+   "validation": {
+   "parent_scan_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+   }
+   }
