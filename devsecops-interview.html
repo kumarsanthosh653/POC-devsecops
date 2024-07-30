@@ -1,3 +1,14 @@
+Git
+docker,docker multistage light weighted images( AS BUILD, COPY --from=build ) , docker compose
+ansible dry run --check and failure(ignore_error=yes)
+jenkins
+Gitlab
+Aws services
+monitoring
+Terraform
+kubernetes
+shell script
+linux - 50- commands
 
 ________________________________________________________________________________________________________
 Git Guardian
@@ -7,8 +18,17 @@ Splunk
 
 Security Hub
 
+prometheus  
+Grafana
 
-________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________
+
+NIC
+
+Network Interface Card is for high availability so that Eni can be attached to multiple instances where 
+multiple subnets and multiple security groups attached for more secured restrict subnets and its components.
+
+_____________________________________________________________________________________________________
 
 Aws config:-----------
 configuration changes of Resources are tracked here and sent sns topic
@@ -44,6 +64,14 @@ ________________________________________________________________________________
 Inspector
 
 hybrid or agent based ssm agent in ec2 machines
+
+Hybrid
+Inspector will use Agent-based scanning for all eligible instances managed by SSM, and agentless scanning using
+ EBS snapshots for eligible instances that are not managed by SSM.
+
+ Agent-based
+ Only eligible EC2 instances that are SSM managed will be actively scanned.
+ 
 scan vulnerabilities in ec2 machines, ecr images as well
 
 ____________________________________________________________________________________________________________
@@ -112,20 +140,369 @@ CI/CD pipeline, such as after deployment to a staging environment.
 
 zap.sh -quciker 
 
+gitlab template
+eclipse
+resusable tenmplates
+
+
+Grafana: Visualization tool that supports a variety of data sources, including Loki.
+Loki: A log aggregation system designed to store and query logs.
+Promtail: An agent that ships logs to Loki.
+
+
+prometheus(metrics) selected as data source for grafana
+
 ______________________________________________________________________________________________________
-{
-    -   "scan_config": {
-               "id": "2514066b-4b96-4aad-a707-306167949c0c"
-           },
-           "scan_type": "REGULAR"
-   
-   
-           {
-   "scan_config": {
-   "id": "2514066b-4b96-4aad-a707-306167949c0c"
-   },
-   "scan_type": "VERIFICATION",
-   "validation": {
-   "parent_scan_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-   }
-   }
+1.how to create backups to instances?
+using lifecycle policy for snapshots at volumes by tagging
+
+2. how db can be connected from deployment?
+3.when configmaps values changed how about deployment using it?
+
+k8s
+
+deployment rollout commands
+kubectl rollout status deployment/dp
+kubectl rollout history deployment/dp
+kubectl rollout undo deployment/dp --to-revision=2
+kubectl rollout history deployment/dp
+kubectl rollout pause deployment/dp
+kubectl rollout resume deployment/dp
+
+---------------------------------------------------------------------------
+ingress is a loadbalancer which load balances the services endpoints 
+hostbased
+pathbased
+
+
+---------------------------------------------------------------------------
+RBAC
+service account->Rolebinding->Role
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+ name: get-pods
+rules:
+ - apiGroups: ["*"]
+   resources: ["pods"]
+   verbs: ["list"]
+---
+   apiVersion: rbac.authorization.k8s.io/v1
+   kind: RoleBinding
+   metadata:
+     name: div-get-pods
+   subjects:
+   - kind: ServiceAccount
+     name: my-service-account
+     apiGroup: rbac.authorization.k8s.io
+   roleRef:
+     kind: Role
+     name: get-pods
+     apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-service-account
+  namespace: default
+
+---------------------------------------------------------------------------
+pv
+pvc
+---------------------------------------------------------------------------
+HPA-metric servers
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+ name: myapp-hpa
+spec:
+ scaleTargetRef:
+   apiVersion: apps/v1
+   kind: Deployment
+   name: myapp-deployment
+ minReplicas: 2
+ maxReplicas: 10
+ targetCPUUtilizationPercentage: 50
+
+ kubectl autoscale deployment my-deployment --cpu-percent=50 --min=1 --max=10
+---------------------------------------------------------------------------
+probes
+
+Liveness Probe
+Purpose: Checks if the container is still alive. If the liveness probe fails, Kubernetes will restart the container.
+When to Use: When you want to ensure that the container is running and hasn’t become stuck or deadlocked.
+
+livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 80
+      initialDelaySeconds: 30
+      periodSeconds: 10
+
+
+Readiness Probe
+Purpose: Checks if the container is ready to accept traffic. If the readiness probe fails, the container is removed from the service endpoints until it passes.
+When to Use: To determine if the container is ready to start accepting traffic.
+
+readinessProbe:
+      httpGet:
+        path: /readiness
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 5
+
+---------------------------------------------------------------------------
+node labelling --- kubectl label nodes <node-name> key=value ---
+
+    kubectl label nodes <node-name> key=value
+
+---------------------------------------------------------------------------
+nodeselector
+
+spec:
+  containers:
+  - name: my-container
+    image: nginx
+  nodeSelector:
+    key: value
+---------------------------------------------------------------------------
+nodeaffinity
+
+Types of Node Affinity
+
+RequiredDuringSchedulingIgnoredDuringExecution:-
+
+Purpose: Nodes must match the specified rules for scheduling.
+Effect: Pods won’t be scheduled if no nodes match the rules.
+
+PreferredDuringSchedulingIgnoredDuringExecution:-
+
+Purpose: Preferences for node selection.
+Effect: Prefer nodes that match the rules, but it’s not mandatory.
+
+
+affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: disktype
+            operator: In
+            values:
+            - ssd
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - preference:
+          matchExpressions:
+          - key: size
+            operator: In
+            values:
+            - large
+        weight: 1
+
+<taints:->
+
+
+In Kubernetes, taints and tolerations are mechanisms used to control which pods can be scheduled on which nodes. 
+They work together to ensure that only certain pods are scheduled on nodes that have specific conditions or restrictions.
+
+Taints
+Taints are applied to nodes and prevent pods from being scheduled onto them unless the pod has a corresponding toleration.
+ A taint consists of three parts:
+
+Effect: The effect of the taint on pods that do not tolerate it. Possible effects are:
+
+NoSchedule: Pods cannot be scheduled on the node.
+
+PreferNoSchedule: Kubernetes will try to avoid scheduling pods on the node, but it’s not a strict requirement.
+
+NoExecute: Pods that are already running on the node will be evicted if they do not tolerate the taint.
+
+</taints:->
+
+
+
+
+
+
+
+
+4. how to create custom level metrics ?
+
+
+
+5.if system rebooted couldnt able to ssh how ?
+6. system status check failed how ?
+7. how about there are 100 subnets decreased to 20 how can we notify that?
+8 ansible dry run how and avoid or skipped error on tasks ?
+9. kubernetes upgradation ?
+10.how to find command ?
+11. shell script ?
+12. can a disaster recover can be done using route 53 ?
+13. can a cahing can be done manually at cloudfront ? 
+________________________________________________________________________________________________________
+
+hell script----class 1
+
+df -h to know the disk space
+
+free ram size
+
+top cpu utilization
+
+to execurte we use 
+./file.sh
+.file.sh
+bash .file.sh
+sh file.sh
+
+step 1
+vi file.sh
+echo "hhiello"
+echo "hi"
+date
+
+sh file.sh
+
+step 2:----
+
+to debug use 
+
+sh -x file.sh
+
+shellscript-class-2------->
+
+step 3:-----
+to debug in file
+vi file.sh
+-x
+echo "hhiello"
+echo "hi"
+date
++x
+
+step4:------
+One Line Comment
+
+#
+
+Multi Line COmment
+
+<<sangthu
+file content here
+Santhu or santhu>>
+
+step5:variables:-------
+1.system defined variables
+env
+printenv
+
+envname=envvalue
+name=santhu
+
+echo $name
+
+if u enter env in system u will get all system degffine d variables
+
+if u want to change any enter export name=santhus
+
+echo $name will get different values
+
+2. user defined variables
+
+cat var.sh
+a=10
+b=20
+c=30
+name=santhu
+
+echo "a value is $a"
+echo "a value is $b"
+echo "a value is $c"
+echo "name is $name"
+
+sh var.sh
+---------------------------------------------------------------------------
+shellscript-class-3------->
+
+command Line arguments:while executing shell script passing the values called as command line arguments.
+
+sh dbbackup.sh dbname dbloc
+
+$0 script file name
+$1 1st arg value --> dbname
+$2 2nd arg value --> dbloc
+$3 so on
+${10} if its 2 digit arg value
+
+$# ----> no of args
+$$ ----> pid
+$? ----> previous cmd execution status will be o - successfull or 127 - failure
+
+see this cat args.sh
+echo $1
+echo $2
+echo $3
+echo $4
+echo $10
+echo $@
+echo $*
+echo $#
+echo $$
+echo $?
+cal
+
+next sh args.sh
+next pass arguments sh args.shh santhu name
+and see
+
+if else condition:----------
+----------------
+if [ $# -eq 2 ]
+then
+echo $1
+echo $2
+echo $3
+echo $4
+echo $10
+echo $@
+echo $*
+echo $#
+echo $$
+echo $?
+cal
+else
+echo "please pass like echo$0 arg1 arg2"
+fi
+
+-eq --> equals to
+-le --> lessthenequal
+-lt --> lessthen
+-ge --> greaterthenoreual
+-gt --> greater than
+-ne --> not equals
+
+string:------->
+--------
+string must be '' or ""
+string is like
+some_vars="hi team i am working on the shell script"
+value= $some_vars
+length of string = ${#some_vars}
+if u rewuired to skip 10 characters
+echo ${some_vars:10}
+if u requiredonly 5 characters after skipping 10 characters
+echo $(some_vars:10:5)
+if u want last 5 characters
+echo $(some_vars: -5)
+
+string_vars="hi team i am working on the shell script"
+
+echo $string_vars
+echo ${#string_vars}
+echo ${string_vars:12}
+echo ${string_vars:12:7}
+echo ${string_vars: -6}
+
+--------------------------------------
